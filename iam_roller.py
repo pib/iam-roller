@@ -71,10 +71,12 @@ def write_secret(namespace, name, data):
     sec.string_data = data
 
     try:
+        log.info("Attempting to create %s in namespace %s", name, namespace)
         res = kapi.create_namespaced_secret(namespace=namespace, body=sec)
     except ApiException as e:
         if e.status != 409:
             raise
+        log.info("Secret already exists, replacing instead")
         res = kapi.replace_namespaced_secret(name=name, namespace=namespace, body=sec)
     return res
 
@@ -102,6 +104,7 @@ def main():
     args = parser.parse_args()
 
     run(args.namespace, args.name)
+
 
 if __name__ == '__main__':
     log.info("start")
