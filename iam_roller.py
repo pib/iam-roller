@@ -7,8 +7,10 @@ from requests import RequestException
 
 import boto3
 from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 
-log = logging.getLogger(__name__)
+logging.basicConfig()
+log = logging.getLogger(__file__)
 log.setLevel(logging.INFO)
 
 
@@ -68,18 +70,23 @@ def write_secret(namespace, name, data):
     sec.type = 'Opaque'
     sec.string_data = data
 
-    res = kapi.create_namespaced_secret(namespace=namespace, body=sec)
+    try:
+        res = kapi.create_namespaced_secret(namespace=namespace, body=sec)
+    except ApiException as e:
+        if e.status != 409:
+            raise
+        res = kapi.replace_namespaced_secret(name=name, namespace=namespace, body=sec)
     return res
 
 
 def run(namespace, name):
-    config.load_incluster_config()
 
     role_arn = get_role_arn()
     log.info('Generating temporary credentials for role %s', role_arn)
     creds = assume_role(role_arn)
     creds_file = make_creds_file(creds['Credentials'])
 
+    config.load_incluster_config()
     res = write_secret(namespace, name, data={'credentials': creds_file})
     log.info('Response: %s', res)
 
@@ -97,4 +104,5 @@ def main():
     run(args.namespace, args.name)
 
 if __name__ == '__main__':
+    log.info("start")
     main()
