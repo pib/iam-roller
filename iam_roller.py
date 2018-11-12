@@ -35,7 +35,7 @@ def get_metadata_field(path, field):
 
 
 def get_role_arn():
-    account_id = get_metadata_field('/latest/meta-data/identity-credentials/ec2/info', 'AccountId')
+    account_id = get_metadata_field('/latest/dynamic/instance-identity/document', 'accountId')
     role_name = get_raw_metadata('/latest/meta-data/iam/security-credentials/').split('\n')[0]
 
     role_arn = 'arn:aws:iam::{}:role/{}'.format(account_id, role_name)
