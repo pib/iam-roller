@@ -4,6 +4,8 @@ FROM base as builder
 ENV PYTHONUNBUFFERED 1
 WORKDIR /install
 
+RUN apk --no-cache add --update build-base libffi-dev openssl-dev
+
 COPY requirements.txt /requirements.txt
 
 RUN pip install --install-option="--prefix=/install" -r /requirements.txt
