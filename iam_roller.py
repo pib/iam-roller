@@ -8,13 +8,16 @@ from requests import RequestException
 import boto3
 from kubernetes import client, config
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
 
 def get_raw_metadata(path):
     try:
         r = requests.get('http://169.254.169.254' + path)
         r.raise_for_status()
     except RequestException as e:
-        logging.exception(e)
+        log.exception(e)
         return ''
 
     return r.text
@@ -28,7 +31,7 @@ def get_metadata_field(path, field):
     try:
         response_json = json.loads(raw)
     except ValueError as e:
-        logging.exception(e)
+        log.exception(e)
         return None
 
     return response_json[field]
@@ -73,12 +76,12 @@ def run(namespace, name):
     config.load_incluster_config()
 
     role_arn = get_role_arn()
-    logging.info('Generating temporary credentials for role %s', role_arn)
+    log.info('Generating temporary credentials for role %s', role_arn)
     creds = assume_role(role_arn)
     creds_file = make_creds_file(creds['Credentials'])
 
     res = write_secret(namespace, name, data={'credentials': creds_file})
-    logging.info('Response: %s', res)
+    log.info('Response: %s', res)
 
 
 def main():
