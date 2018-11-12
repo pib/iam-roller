@@ -1,3 +1,4 @@
+import json
 import logging
 
 import requests
@@ -14,14 +15,16 @@ def get_raw_metadata(path):
         logging.exception(e)
         return ''
 
+    return r.text
+
 
 def get_metadata_field(path, field):
-    r = get_raw_metadata(path)
-    if not r:
+    raw = get_raw_metadata(path)
+    if not raw:
         return ''
 
     try:
-        response_json = r.json()
+        response_json = json.loads(raw)
     except ValueError as e:
         logging.exception(e)
         return None
