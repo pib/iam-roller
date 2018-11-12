@@ -1,26 +1,18 @@
-ARG PYTHON_VERSION=3.7.1
+FROM python:3.7.1-alpine as base
 
-
-FROM python:${PYTHON_VERSION}-stretch as builder
+FROM base as builder
 ENV PYTHONUNBUFFERED 1
+WORKDIR /install
 
-RUN python3 -m venv /venv
+COPY requirements.txt /requirements.txt
 
-WORKDIR /app
-
-COPY ./requirements.txt /app/requirements.txt
-RUN /venv/bin/pip install -r /app/requirements.txt
-
-COPY . /app
-#RUN /venv/bin/pip install -e /app
+RUN pip install --install-option="--prefix=/install" -r /requirements.txt
 
 
-FROM python:${PYTHON_VERSION}-slim-stretch
+FROM base
 ENV PYTHONUNBUFFERED 1
-
 WORKDIR /app
-
-COPY --from=builder /venv /venv
+COPY --from=builder /install /usr/local
 COPY . /app
 
-ENTRYPOINT ["/venv/bin/python3", "iam_roller.py"]
+ENTRYPOINT ["python3", "iam_roller.py"]
