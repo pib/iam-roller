@@ -90,7 +90,7 @@ def run(namespace, name):
 
     config.load_incluster_config()
     res = write_secret(namespace, name, data={'credentials': creds_file})
-    log.info('Response: %s', res)
+    log.debug('Response: %s', res)
 
 
 def main():
