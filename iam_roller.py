@@ -1,9 +1,5 @@
 import argparse
-import json
 import logging
-
-import requests
-from requests import RequestException
 
 import boto3
 from kubernetes import client, config
@@ -12,39 +8,6 @@ from kubernetes.client.rest import ApiException
 logging.basicConfig()
 log = logging.getLogger(__file__)
 log.setLevel(logging.INFO)
-
-
-def get_raw_metadata(path):
-    try:
-        r = requests.get('http://169.254.169.254' + path)
-        r.raise_for_status()
-    except RequestException as e:
-        log.exception(e)
-        return ''
-
-    return r.text
-
-
-def get_metadata_field(path, field):
-    raw = get_raw_metadata(path)
-    if not raw:
-        return ''
-
-    try:
-        response_json = json.loads(raw)
-    except ValueError as e:
-        log.exception(e)
-        return None
-
-    return response_json[field]
-
-
-def get_role_arn():
-    account_id = get_metadata_field('/latest/dynamic/instance-identity/document', 'accountId')
-    role_name = get_raw_metadata('/latest/meta-data/iam/security-credentials/').split('\n')[0]
-
-    role_arn = 'arn:aws:iam::{}:role/{}'.format(account_id, role_name)
-    return role_arn
 
 
 def assume_role(role_arn):
@@ -81,9 +44,8 @@ def write_secret(namespace, name, data):
     return res
 
 
-def run(namespace, name):
+def run(role_arn, namespace, name):
 
-    role_arn = get_role_arn()
     log.info('Generating temporary credentials for role %s', role_arn)
     creds = assume_role(role_arn)
     creds_file = make_creds_file(creds['Credentials'])
@@ -100,10 +62,12 @@ def main():
                         help="Namespace in which secret should be stored")
     parser.add_argument('--name', required=True,
                         help="Name under which the secret should be stored")
+    parser.add_argument('--role-arn', required=True,
+                        help="ARN of the IAM Role to assume")
 
     args = parser.parse_args()
 
-    run(args.namespace, args.name)
+    run(args.role_arn, args.namespace, args.name)
 
 
 if __name__ == '__main__':
