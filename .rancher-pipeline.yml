@@ -4,7 +4,7 @@ stages:
   - publishImageConfig:
       dockerfilePath: ./Dockerfile
       buildContext: .
-      tag: 815667184744.dkr.ecr.us-east-1.amazonaws.com/cert-roller:test${CICD_EXECUTION_SEQUENCE}
+      tag: test${CICD_EXECUTION_SEQUENCE}
       pushRemote: true
       registry: 815667184744.dkr.ecr.us-east-1.amazonaws.com/cert-roller
 timeout: 60
