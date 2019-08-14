@@ -1,0 +1,11 @@
+stages:
+- name: build and push
+  steps:
+  - publishImageConfig:
+      dockerfilePath: ./Dockerfile
+      buildContext: .
+      tag: testingthings:${CICD_EXECUTION_SEQUENCE}
+      pushRemote: true
+      registry: 815667184744.dkr.ecr.us-east-1.amazonaws.com/cert-roller
+timeout: 60
+notification: {}
